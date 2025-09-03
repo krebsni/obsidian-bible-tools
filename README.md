@@ -1,28 +1,35 @@
-# Obsidian Bible Tools
+# Bible Tools
 
-Port of personal Python utilities into an Obsidian plugin.
+Outline formatter, Bible verse linker (selection/line/folder), _Bible builder from public catalogues (bolls.life), PDF import with OCR, and folder utilities.
 
 ## Features
-- Add folder index files (Dataview)
-- Add Next/Previous links across numbered files
-- Extract red <mark> highlights into a section or a folder summary
-- Extract an "Outline" from headings and insert intelligently
-- Format outline text (Roman numerals/A/B/1/a) into Markdown headings
-- Auto-link Bible verse references like `Rom. 1:10-12, 14; 2:1` to your anchors `[[Rom#^1-10|Rom. 1:10]]`
-- Command palette, hotkeys, mobile toolbar, ribbon icons
-- obsidian:// protocol actions for command-line triggering
 
-## Build
-```bash
-npm i
-npm run build
-```
+- **Outline Formatter**: cleans PDF-style line breaks, splits inline points (I./A./1./a./(1)), keeps “S. S.” intact, preserves verse refs (e.g., `v. 7.`), normalizes dashes.
+- **Verse Linker**: link `John 3:16; 17:1` → `[[John#^3-16|…]]`, with optional version suffix (e.g., `John (KJV)`) and selection/line/folder scope.
+- **Bible Builder**: generate `_Bible/<Version>/Book (VER)` files, chapters and verse anchors (`^ch-verse`), chapter navigation, optional frontmatter, concurrency & progress.
+- **Folder Indexer**: insert Dataview index files per leaf folder.
 
-Copy the folder into your vault `.obsidian/plugins/` (or symlink), then enable in Settings → Community Plugins.
+## Installation (Community)
 
-## Command line trigger (macOS example)
-```bash
-open 'obsidian://obsidian-bible-tools?action=link-verses&scope=current'
-```
+1. In Obsidian: **Settings → Community plugins → Browse**.
+2. Search **Bible Tools**, install, then **Enable**.
 
-See Settings → Mobile → Toolbar to add commands to the mobile editor toolbar.
+## Commands
+
+- Bible Tools: Link verses (choose version...)
+- Bible Tools: Create Highlights.md from folder
+- Bible Tools: Create/Update Folder Index (Books)
+- Bible Tools: Extract Red Highlights to current file
+- Bible Tools: Build _Bible (download from bolls.life)
+- Bible Tools: Auto-link Bible verses (file or folder)
+- Bible Tools: Append Outline (from ##...###### headings)
+- Bible Tools: Insert Next/Previous Links (Current Folder)
+- Bible Tools: Create/Update Folder Index for Current Folder Bible Tools: Link verses in selection/line (choose version...)
+- Bible Tools: Format Outline (Roman/A/1/a → Markdown headings) and Link Verses
+
+
+## Changelog
+See **Releases** for version-by-version notes.
+
+## License
+MIT

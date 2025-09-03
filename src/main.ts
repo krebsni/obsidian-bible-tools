@@ -17,7 +17,7 @@ export default class ObsidianBibleTools extends Plugin {
   settings: BibleToolsSettings;
 
   async onload() {
-    console.log("Loading Obsidian Bible Tools…");
+    console.log("Loading Bible Tools…");
     registerIcons(addIcon);
 
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -129,7 +129,7 @@ export default class ObsidianBibleTools extends Plugin {
   }
 
   async onunload() {
-    console.log("Unloading Obsidian Bible Tools…");
+    console.log("Unloading Bible Tools…");
   }
 
   async saveSettings() {

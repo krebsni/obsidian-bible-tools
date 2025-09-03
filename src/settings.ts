@@ -54,7 +54,7 @@ export class BibleToolsSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Obsidian Bible Tools — Settings" });
+    containerEl.createEl("h2", { text: "Bible Tools — Settings" });
 
     new Setting(containerEl)
       .setName("Default base folder")

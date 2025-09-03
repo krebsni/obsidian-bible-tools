@@ -1,10 +1,11 @@
 {
-  "id": "obsidian-bible-tools",
-  "name": "Obsidian Bible Tools",
+  "id": "bible-tools",
+  "name": "Bible Tools",
   "version": "1.0.0",
-  "minAppVersion": "1.5.0",
-  "description": "Index builders, next/previous links, highlight extractors, outline tools, and Bible verse auto-linking (ported from your Python scripts).",
-  "author": "Your Name",
-  "authorUrl": "https://github.com/yourname",
-  "isDesktopOnly": false
+  "minAppVersion": "1.6.0",
+  "description": "Outline formatter, Bible verse linker, Bible folder generator, and other utilities",
+  "author": "Nicolai Krebs",
+  "authorUrl": "https://github.com/krebsni",
+  "isDesktopOnly": false,
+  "fundingUrl": "https://buymeacoffee.com/krebsni"
 }
