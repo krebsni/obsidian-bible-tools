@@ -1,0 +1,8 @@
+{
+  "baseFolder": "Booksh",
+  "redMarkCss": "background: #FF5582A6;",
+  "indexFileNameMode": "article-style",
+  "stripMdLinksWhenVerseLike": true,
+  "removeObsidianDisplayLinks": false,
+  "rewriteOldObsidianLinks": true
+}

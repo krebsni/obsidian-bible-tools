@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-bible-tools",
+  "name": "Obsidian Bible Tools",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Index builders, next/previous links, highlight extractors, outline tools, and Bible verse auto-linking (ported from your Python scripts).",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/yourname",
+  "isDesktopOnly": false
+}
