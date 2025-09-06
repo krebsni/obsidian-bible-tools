@@ -1,12 +1,12 @@
 # Bible Tools
 
-Outline formatter, Bible verse linker (selection/line/folder), _Bible builder from public catalogues (bolls.life), PDF import with OCR, and folder utilities.
+Outline formatter, Bible verse linker (selection/line/folder), Bible builder from public catalogues (bolls.life), PDF import with OCR, and folder utilities.
 
 ## Features
 
 - **Outline Formatter**: cleans PDF-style line breaks, splits inline points (I./A./1./a./(1)), keeps “S. S.” intact, preserves verse refs (e.g., `v. 7.`), normalizes dashes.
 - **Verse Linker**: link `John 3:16; 17:1` → `[[John#^3-16|…]]`, with optional version suffix (e.g., `John (KJV)`) and selection/line/folder scope.
-- **Bible Builder**: generate `_Bible/<Version>/Book (VER)` files, chapters and verse anchors (`^ch-verse`), chapter navigation, and optional frontmatter.
+- **Bible Builder**: generate `Bible/<Version>/Book (VER)` files, chapters and verse anchors (`^ch-verse`), chapter navigation, and optional frontmatter.
 - **Folder Indexer**: insert Dataview index files per leaf folder.
 
 ## Installation (Community)
@@ -31,6 +31,10 @@ Outline formatter, Bible verse linker (selection/line/folder), _Bible builder fr
 ## Changelog
 
 See **Releases** for version-by-version notes.
+
+## Bugs
+
+- Generate Bible: modal is buggy, preset not accepted (only after change)
 
 ## Upcoming
 

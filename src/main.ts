@@ -4,14 +4,15 @@ import { registerProtocol } from "./protocol";
 import { registerIcons } from "./icons";
 
 // Commands
-import { commandAddFolderIndex, commandAddIndexForCurrentFolder } from "./commands/addFolderIndex";
-import { commandAddNextPrevious } from "./commands/addNextPrevious";
-import { commandExtractHighlightsFolder } from "./commands/extractHighlightsFolder";
-import { commandExtractRedHighlights } from "./commands/extractRedHighlights";
-import { commandOutlineExtractor } from "./commands/outlineExtractor";
-import { commandOutlineFormatter } from "./commands/outlineFormatter";
-import { commandVerseLinks, commandVerseLinksChooseVersion, commandVerseLinksSelectionOrLine, commandVerseLinksSelectionOrLineChooseVersion } from "./commands/verseLinks";
-import { commandBuildBibleFromBolls } from "./commands/generateBible";
+import { commandAddFolderIndex, commandAddIndexForCurrentFolder } from "./commands/add-folder-index";
+import { commandAddNextPrevious } from "./commands/add-next-previous";
+import { commandExtractHighlightsFolder } from "./commands/extract-highlights-folder";
+import { commandExtractRedHighlights } from "./commands/extract-red-highlights";
+import { commandOutlineExtractor } from "./commands/outline-extractor";
+import { commandOutlineFormatter } from "./commands/outline-formatter";
+import { commandVerseLinks, commandVerseLinksChooseVersion, commandVerseLinksSelectionOrLine, commandVerseLinksSelectionOrLineChooseVersion } from "./commands/verse-links";
+import { commandBuildBibleFromBolls } from "./commands/generate-bible";
+import { commandAddBibleHubLinks, commandRemoveBibleHubLinks } from "./commands/biblehub-links";
 
 export default class ObsidianBibleTools extends Plugin {
   settings!: BibleToolsSettings;
@@ -115,6 +116,18 @@ export default class ObsidianBibleTools extends Plugin {
       id: "link-verses-selection-or-line-choose-version",
       name: "Link verses in selection/current line (with version)",
       callback: () => commandVerseLinksSelectionOrLineChooseVersion(this.app, this.settings),
+    });
+
+    this.addCommand({
+      id: "add-biblehub-interlinear-links",
+      name: "BibleHub: Add interlinear links (file / folder)",
+      callback: () => commandAddBibleHubLinks(this.app),
+    });
+
+    this.addCommand({
+      id: "remove-biblehub-interlinear-links",
+      name: "BibleHub: Remove interlinear links (file / folder)",
+      callback: () => commandRemoveBibleHubLinks(this.app),
     });
 
     registerProtocol(this);

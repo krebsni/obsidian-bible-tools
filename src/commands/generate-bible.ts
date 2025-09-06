@@ -1,19 +1,9 @@
 import { App, Modal, Notice, Setting, TFile, TFolder, normalizePath, requestUrl } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { BOOK_ABBR } from "../lib/verseMap";
+import { BOOK_ABBR } from "../lib/types";
 import { BuildBibleModal } from "src/ui/build-bible-modal";
 
 // ---------- Types ----------
-type LanguagesEntry = {
-  language: string; // e.g. "English"
-  translations: Array<{
-    short_name: string; // e.g. "KJV"
-    full_name: string;  // e.g. "King James Version ..."
-    updated?: number;
-    dir?: "rtl" | "ltr";
-  }>;
-};
-
 type BollsBookMeta = {
   bookid: number;
   chronorder: number;
@@ -55,8 +45,15 @@ const CANON_EN_BY_ID: Record<number, string> = {
 
 function shortAbbrFor(bookId: number, incomingName: string): string {
   const canon = CANON_EN_BY_ID[bookId];
-  if (canon && BOOK_ABBR[canon]) return BOOK_ABBR[canon];
-  if (BOOK_ABBR[incomingName]) return BOOK_ABBR[incomingName];
+  if (canon && BOOK_ABBR[canon]) {
+    const result = BOOK_ABBR[canon];
+    return result === "S.S." ? "SoS" : result;
+  }
+
+  if (BOOK_ABBR[incomingName]) {
+    const result = BOOK_ABBR[incomingName];
+    return result === "S.S." ? "SoS" : result;
+  }
   return incomingName;
 }
 
@@ -107,6 +104,7 @@ type BuildOptions = {
   versionAsSubfolder: boolean;
   autoFrontmatter: boolean;
   concurrency: number;
+  baseFolder: string;
 };
 type ProgressFn = (done: number, total: number, message: string) => void;
 
@@ -141,7 +139,7 @@ function chapterNavLine(bookShort: string, chapters: number): string {
 }
 
 export async function buildBibleFromBolls(app: App, opts: BuildOptions, onProgress: ProgressFn) {
-  const baseFolder = "_Bible";
+  const baseFolder = opts.baseFolder.replace(/\/+$/,"");
   const root = await ensureFolder(app, baseFolder);
   const parent = opts.versionAsSubfolder
     ? await ensureFolder(app, `${baseFolder}/${opts.translationCode}`)

@@ -9,7 +9,7 @@ import {
   requestUrl,
 } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { splitFrontmatter } from "../lib/mdUtils";
+import { splitFrontmatter } from "../lib/md-utils";
 import { PickVersionModal } from "src/ui/pick-version-modal";
 
 /** ---------------------------

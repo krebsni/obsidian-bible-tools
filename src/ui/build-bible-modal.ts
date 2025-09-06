@@ -1,7 +1,7 @@
 import { App, Setting, Notice } from "obsidian";
 import type { BibleToolsSettings } from "../settings";
 import { BaseBollsModal } from "./bolls-base-modal";
-import { buildBibleFromBolls } from "../commands/generateBible";
+import { buildBibleFromBolls } from "../commands/generate-bible";
 
 export class BuildBibleModal extends BaseBollsModal {
   private includeVersionInFileName: boolean;
@@ -39,7 +39,7 @@ export class BuildBibleModal extends BaseBollsModal {
 
     new Setting(contentEl)
       .setName("Place books under version subfolder")
-      .setDesc(`"_Bible/KJV/John (KJV)" vs "_Bible/John"`)
+      .setDesc(`"Bible/KJV/John (KJV)" vs "Bible/John"`)
       .addToggle(t =>
         t.setValue(this.versionAsSubfolder)
          .onChange(v => (this.versionAsSubfolder = v))
@@ -103,6 +103,7 @@ export class BuildBibleModal extends BaseBollsModal {
           versionAsSubfolder: this.versionAsSubfolder,
           autoFrontmatter: this.autoFrontmatter,
           concurrency: this.concurrency,
+          baseFolder: this.settings.baseFolderBible || "Bible",
         },
         (done: number, total: number, msg: any) => {
           this.progressEl.max = total || 1;

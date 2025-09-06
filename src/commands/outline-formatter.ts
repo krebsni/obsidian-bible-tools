@@ -1,6 +1,6 @@
 import { App, Notice } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { formatOutlineText } from "../lib/outlineUtils";
+import { formatOutlineText } from "../lib/outline-utils";
 
 export async function commandOutlineFormatter(app: App, settings: BibleToolsSettings) {
   const file = app.workspace.getActiveFile();

@@ -1,6 +1,6 @@
 import { App, Notice, TFolder } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { listMarkdownFiles } from "../lib/mdUtils";
+import { listMarkdownFiles } from "../lib/md-utils";
 
 export async function commandExtractHighlightsFolder(app: App, settings: BibleToolsSettings) {
   const view = app.workspace.getActiveFile();

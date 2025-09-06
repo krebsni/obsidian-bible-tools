@@ -1,7 +1,7 @@
 import { App, TFile, TFolder, Notice, normalizePath } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { articleStyle, nowStamp } from "../lib/textUtils";
-import { getLeafFoldersUnder, listMarkdownFiles } from "../lib/mdUtils";
+import { articleStyle, nowStamp } from "../lib/text-utils";
+import { getLeafFoldersUnder, listMarkdownFiles } from "../lib/md-utils";
 
 const stripWikilinks = (s: string) => s.replace(/^\[\[|\]\]$/g, "");
 

@@ -1,4 +1,4 @@
-import { ALL_BOOK_TOKENS } from "./verseMap";
+import { ALL_BOOK_TOKENS } from "./types";
 
 const bookAlt = ALL_BOOK_TOKENS.map(b => b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
 

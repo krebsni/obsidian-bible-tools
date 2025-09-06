@@ -3,6 +3,7 @@ import ObsidianBibleTools from "./main";
 import { BollsLanguage, BollsPickerComponent } from "./ui/bolls-picker-component";
 
 export interface BibleToolsSettings {
+  baseFolderBible: string;
   baseFolder: string;
   redMarkCss: string;
   indexFileNameMode: "folder-name" | "article-style";
@@ -16,7 +17,7 @@ export interface BibleToolsSettings {
   bibleDefaultVersion: string | undefined;              // e.g. "KJV"
   bibleDefaultVersionFull: string | undefined;              // e.g. "King James Version"
   bibleDefaultLanguage: string;             // e.g. "English",
-  bibleIncludeVersionInFilename: boolean;   // "John (KJV)" & _Bible/KJV/
+  bibleIncludeVersionInFilename: boolean;   // "John (KJV)" & Bible/KJV/
   bibleAddFrontmatter: boolean;             // add YAML frontmatter at top
 
   // Caching of Bolls catalogue (to avoid re-fetching every time)
@@ -25,6 +26,7 @@ export interface BibleToolsSettings {
 }
 
 export const DEFAULT_SETTINGS: BibleToolsSettings = {
+  baseFolderBible: "Bible",
   baseFolder: "Books",
   redMarkCss: 'background: #FF5582A6;',
   indexFileNameMode: "article-style",
@@ -118,7 +120,15 @@ export class BibleToolsSettingTab extends PluginSettingTab {
           this.plugin.settings.autoLinkVerses = v;
           await this.plugin.saveSettings();
         })
-      );
+    );
+
+
+
+    new Setting(containerEl)
+      .setName("Default Bible folder to create versions in")
+      .setDesc("Root folder to scan when a command needs a folder (e.g., index creation).")
+      .addText(t => t.setPlaceholder("Bible").setValue(this.plugin.settings.baseFolderBible)
+        .onChange(async (v) => { this.plugin.settings.baseFolderBible = v || "Bible"; await this.plugin.saveSettings(); }));
 
     // Host element for the picker component
     const pickerHost = containerEl.createDiv({ cls: "bolls-picker-host" });

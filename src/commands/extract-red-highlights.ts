@@ -1,6 +1,6 @@
 import { App, Notice } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { insertAfterYamlOrH1 } from "../lib/mdUtils";
+import { insertAfterYamlOrH1 } from "../lib/md-utils";
 
 export async function commandExtractRedHighlights(app: App, settings: BibleToolsSettings) {
   const file = app.workspace.getActiveFile();

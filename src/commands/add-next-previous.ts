@@ -1,6 +1,6 @@
 import { App, TFile, TFolder, Notice } from "obsidian";
 import { BibleToolsSettings } from "../settings";
-import { listMarkdownFiles, upsertBottomLinks, upsertTopLinksBlock } from "../lib/mdUtils";
+import { listMarkdownFiles, upsertBottomLinks, upsertTopLinksBlock } from "../lib/md-utils";
 
 function tokenFromFilename(name: string): number | null {
   const m = name.match(/^(\d+)/);
