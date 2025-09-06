@@ -1,19 +1,20 @@
-import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import ObsidianBibleTools from "./main";
-import { BollsLanguage } from "./ui/bolls-base-modal";
+import { BollsLanguage, BollsPickerComponent } from "./ui/bolls-picker-component";
 
 export interface BibleToolsSettings {
   baseFolder: string;
   redMarkCss: string;
   indexFileNameMode: "folder-name" | "article-style";
-  stripMdLinksWhenVerseLike: boolean; // If true, strip Markdown links that look like scripture references (e.g., [Rom. 1:1](url) → Rom. 1:1)
-  removeObsidianDisplayLinks: boolean; // If true, remove Obsidian display-text links that look like scripture references (e.g., [[Rom. 1:1|Rom. 1:1]] → Rom. 1:1)
-  rewriteOldObsidianLinks: boolean; // If true, rewrite legacy Obsidian links (e.g., [[Rom 1#^3|…]] → [[Rom#^1-3|…]]) and remove previous Obsidian links that have verse-like display pattern
+  stripMdLinksWhenVerseLike: boolean; // strip Markdown links that look like scripture references (e.g., [Rom. 1:1](url) → Rom. 1:1)
+  removeObsidianDisplayLinks: boolean; // remove Obsidian display-text links that look like scripture references (e.g., [[Rom. 1:1|Rom. 1:1]] → Rom. 1:1)
+  rewriteOldObsidianLinks: boolean; // rewrite legacy Obsidian links (e.g., [[Rom 1#^3|…]] → [[Rom#^1-3|…]]) and remove previous Obsidian links that have verse-like display pattern
 
-  autoLinkVerses: boolean; // If true, auto-link verses in the current file when formatting outlines
+  autoLinkVerses: boolean; // auto-link verses in the current file when formatting outlines
 
   // Bible generation defaults
-  bibleDefaultVersion: string;              // e.g. "KJV"
+  bibleDefaultVersion: string | undefined;              // e.g. "KJV"
+  bibleDefaultVersionFull: string | undefined;              // e.g. "King James Version"
   bibleDefaultLanguage: string;             // e.g. "English",
   bibleIncludeVersionInFilename: boolean;   // "John (KJV)" & _Bible/KJV/
   bibleAddFrontmatter: boolean;             // add YAML frontmatter at top
@@ -33,7 +34,8 @@ export const DEFAULT_SETTINGS: BibleToolsSettings = {
   autoLinkVerses: true,
 
   // Bible generation defaults
-  bibleDefaultVersion: "KJV",
+  bibleDefaultVersion: undefined,
+  bibleDefaultVersionFull: undefined,
   bibleDefaultLanguage: "English",
   bibleIncludeVersionInFilename: true,
   bibleAddFrontmatter: false,
@@ -75,43 +77,41 @@ export class BibleToolsSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName("Red highlight CSS")
-      .setDesc("Exact style a <mark> tag must have to be considered a red highlight.")
+      .setName("Highlight CSS")
+      .setDesc("Exact style a <mark> tag must have to be considered a highlight.")
       .addText(t => t.setPlaceholder('background: #FF5582A6;')
         .setValue(this.plugin.settings.redMarkCss)
         .onChange(async (v) => { this.plugin.settings.redMarkCss = v; await this.plugin.saveSettings(); }));
 
     new Setting(containerEl)
       .setName("Strip Markdown links that look like scripture")
-      .setDesc("Replace [Rom. 1:1](url) with plain text before linking to anchors.")
       .addToggle(t => t.setValue(this.plugin.settings.stripMdLinksWhenVerseLike)
-        .onChange(async (v) => { this.plugin.settings.stripMdLinksWhenVerseLike = v; await this.plugin.saveSettings(); }));
+        .onChange(async (v) => {
+          this.plugin.settings.stripMdLinksWhenVerseLike = v;
+          await this.plugin.saveSettings();
+        }));
 
     new Setting(containerEl)
       .setName("Remove Obsidian display-text links that look like references")
-      .setDesc("If [[Target|Display]] looks like a scripture ref, replace it with plain text before linking (same as the Python script).")
       .addToggle(t => t
         .setValue(this.plugin.settings.removeObsidianDisplayLinks)
         .onChange(async (value) => {
           this.plugin.settings.removeObsidianDisplayLinks = value;
           await this.plugin.saveSettings();
-          new Notice("Saved: remove Obsidian display-text links"); }));
-
-    new Setting(containerEl)
-      .setName("Rewrite legacy Obsidian links")
-      .setDesc("Convert [[Rom 1#^3|…]] → [[Rom#^1-3|…]] before linking and remove previous Obsidian links that have verse-like display pattern.")
-      .addToggle(t => t
-        .setValue(this.plugin.settings.rewriteOldObsidianLinks)
-        .onChange(async (value) => {
-          this.plugin.settings.rewriteOldObsidianLinks = value;
-          await this.plugin.saveSettings();
-          new Notice("Saved: rewrite old-style links");
         }));
 
-    // Toggle: Auto-link verses after outline formatting
+    // new Setting(containerEl)
+    //   .setName("Rewrite legacy Obsidian links")
+    //   .setDesc("Convert [[Rom 1#^3|…]] → [[Rom#^1-3|…]] before linking and remove previous Obsidian links that have verse-like display pattern.")
+    //   .addToggle(t => t
+    //     .setValue(this.plugin.settings.rewriteOldObsidianLinks)
+    //     .onChange(async (value) => {
+    //       this.plugin.settings.rewriteOldObsidianLinks = value;
+    //       await this.plugin.saveSettings();
+    //     }));
+
     new Setting(containerEl)
       .setName("Auto-link verses after outline formatting")
-      .setDesc("After the outline text is formatted, automatically link scripture references in the result.")
       .addToggle(t => t
         .setValue(this.plugin.settings.autoLinkVerses)
         .onChange(async (v) => {
@@ -120,46 +120,36 @@ export class BibleToolsSettingTab extends PluginSettingTab {
         })
       );
 
-    // Defaults for Bible generator
-    // new Setting(containerEl)
-    // .setName("Default Bible version")
-    // .setDesc("Used as the preselected version when generating the _Bible vault.")
-    // .addDropdown(d => d
-    //   .addOptions({
-    //     KJV: "KJV – King James Version",
-    //     WEB: "WEB – World English Bible",
-    //     ASV: "ASV – American Standard Version",
-    //     YLT: "YLT – Young's Literal Translation",
-    //     DARBY: "DARBY – Darby Translation",
-    //     BBE: "BBE – Bible in Basic English",
-    //   })
-    //   .setValue(this.plugin.settings.bibleDefaultVersion)
-    //   .onChange(async (v) => {
-    //     this.plugin.settings.bibleDefaultVersion = v;
-    //     await this.plugin.saveSettings();
-    //   })
-    // );
+    // Host element for the picker component
+    const pickerHost = containerEl.createDiv({ cls: "bolls-picker-host" });
 
-    // new Setting(containerEl)
-    // .setName("Include version in filenames")
-    // .setDesc(`If ON: folder structure like "_Bible/KJV/John (KJV)". If OFF: folder structure like "_Bible/John".`)
-    // .addToggle(t => t
-    //   .setValue(this.plugin.settings.bibleIncludeVersionInFilename)
-    //   .onChange(async (v) => {
-    //     this.plugin.settings.bibleIncludeVersionInFilename = v;
-    //     await this.plugin.saveSettings();
-    //   })
-    // );
+    // Instantiate the reusable picker.
+    // - It will load/cache Bolls languages.json on its own.
+    // - It calls onChange(languageKey, translationCode, translationFull) when user changes selection.
+    const picker = new BollsPickerComponent(
+      {
+        app: this.app,
+        settings: this.plugin.settings as BibleToolsSettings,
+        langBlocks: [], // component will fetch + fill
+        languageKey: this.plugin.settings.bibleDefaultLanguage ?? "ALL",
+        translationCode: this.plugin.settings.bibleDefaultVersion,
+        translationFull: this.plugin.settings.bibleDefaultVersionFull,
+        defaults: {
+          languageLabel: this.plugin.settings.bibleDefaultLanguage ?? null,
+          versionShort:  this.plugin.settings.bibleDefaultVersion,
+        },
+        container: pickerHost,
+        versionsContainer: pickerHost.createDiv(),
+        onChange: async (language, version, versionFull) => {
+          // Persist selections as your plugin defaults
+          this.plugin.settings.bibleDefaultLanguage     = language;
+          this.plugin.settings.bibleDefaultVersion = version;
+          this.plugin.settings.bibleDefaultVersionFull = versionFull;
 
-    // new Setting(containerEl)
-    //   .setName("Add YAML frontmatter to generated Bible files")
-    //   .setDesc('If ON, each book file starts with YAML (title, version, book, chapters, etc.).')
-    //   .addToggle(t => t
-    //     .setValue(this.plugin.settings.bibleAddFrontmatter)
-    //     .onChange(async (v) => {
-    //       this.plugin.settings.bibleAddFrontmatter = v;
-    //       await this.plugin.saveSettings();
-    //     })
-    //   );
+          await this.plugin.saveSettings?.();
+        },
+      },
+      this.plugin.settings as BibleToolsSettings
+    );
   }
 }

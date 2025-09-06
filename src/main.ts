@@ -14,7 +14,7 @@ import { commandVerseLinks, commandVerseLinksChooseVersion, commandVerseLinksSel
 import { commandBuildBibleFromBolls } from "./commands/generateBible";
 
 export default class ObsidianBibleTools extends Plugin {
-  settings: BibleToolsSettings;
+  settings!: BibleToolsSettings;
 
   async onload() {
     console.log("Loading Bible Tools…");
@@ -83,48 +83,40 @@ export default class ObsidianBibleTools extends Plugin {
     });
 
     this.addCommand({
+      id: "build-bible-from-bolls",
+      name: "Import Bible version into vault (download from bolls.life)",
+      icon: "book-open",
+      callback: () => commandBuildBibleFromBolls(this.app, this.settings),
+    });
+
+    this.addCommand({
       id: "obtb-verse-links",
-      name: "Auto-link Bible verses (file or folder)",
+      name: "Link verses",
       icon: "obtb-bible",
       callback: async () => commandVerseLinks(this.app, this.settings)
     });
 
     this.addCommand({
       id: "link-verses-selection-or-line",
-      name: "Link verses in selection (or current line)",
+      name: "Link verses in selection/current line",
       icon: "link-2", // appears in mobile command bar
       editorCallback: async (_editor, _view) => {
         await commandVerseLinksSelectionOrLine(this.app, this.settings);
       },
     });
 
-    // this.addCommand({
-    //   id: "generate-bible-vault",
-    //   name: "Generate _Bible folder and files…",
-    //   callback: () => openBibleBuildModal(this.app, this.settings),
-    // });
-
-    this.addCommand({
-      id: "build-bible-from-bolls",
-      name: "Build _Bible (download from bolls.life)",
-      icon: "book-open",
-      callback: () => commandBuildBibleFromBolls(this.app, this.settings),
-    });
-
-    // in main plugin file (e.g., src/main.ts) inside onload()
     this.addCommand({
       id: "link-verses-current-choose-version",
-      name: "Link verses (choose version…)",
+      name: "Link verses (with version)",
       callback: () => commandVerseLinksChooseVersion(this.app, this.settings),
     });
 
     this.addCommand({
       id: "link-verses-selection-or-line-choose-version",
-      name: "Link verses in selection/line (choose version…)",
+      name: "Link verses in selection/current line (with version)",
       callback: () => commandVerseLinksSelectionOrLineChooseVersion(this.app, this.settings),
     });
 
-    // obsidian:// protocol handler for command line triggers
     registerProtocol(this);
   }
 

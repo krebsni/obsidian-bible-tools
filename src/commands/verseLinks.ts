@@ -147,6 +147,8 @@ const BOOK_ABBR: Record<string, string> = {
 
 type BookMap = Record<string, string>;
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const RANGE_SEP = /[\-\u2010\u2011\u2012\u2013\u2014\u2015]/;  // en dash, em dash, hyphen
+const TRIM_TAIL_PUNCT = /[,:;.\)]$/; // common trailing punctuation to drop for parsing (kept in display)
 
 /** Build locale-specific book map + alternation at runtime */
 function buildBookContext(settings?: BibleToolsSettings) {
@@ -189,23 +191,23 @@ function buildBookContext(settings?: BibleToolsSettings) {
     //   `)`;
     const ref1 =
       `(?:(?:${book})?\\.?\\s*` +
-      `\\d+(?:-\\d+)?:\\d+[a-z]?(?:-\\d+)?[a-z]?` +
-      `(?:\\s*,\\s*\\d+[a-z]?(?:-\\d+)?[a-z]?|\\s*;\\s*\\d+:\\d+[a-z]?(?:-\\d+)?[a-z]?)*` +
+      `\\d+(?:${RANGE_SEP.source}\\d+)?:\\d+[a-z]?(?:${RANGE_SEP.source}\\d+)?[a-z]?` +
+      `(?:\\s*,\\s*\\d+[a-z]?(?:${RANGE_SEP.source}\\d+)?[a-z]?|\\s*;\\s*\\d+:\\d+[a-z]?(?:${RANGE_SEP.source}\\d+)?[a-z]?)*` +
       `)`;
-    const ref2 = `(?:(${book})\\.?\\s+(\\d+)(?:-(\\d+))?)`;
+    const ref2 = `(?:(${book})\\.?\\s+(\\d+)(?:${RANGE_SEP.source}(\\d+))?)`;
     const REF = `(?<ref>${ref1}|${ref2})`;
 
     const VERSE =
       `(?<verse>` +
       `\\b[Vv]v?(?:\\.|erses?)\\s*` +
-      `\\d+(?:-\\d+)?[a-z]?` +
-      `(?:(?:,|,?\\s*and)\\s*\\d+(?:-\\d+)?[a-z]?)*` +
+      `\\d+[a-z]?(?:${RANGE_SEP.source}\\d+)?[a-z]?` +
+      `(?:(?:,|,?\\s*and)\\s*\\d+(?:${RANGE_SEP.source}\\d+)?[a-z]?)*` +
       `)`;
 
     const CHAPTER =
       `(?<chapter>` +
       `\\b[Cc]h(?:apters?|s?\\.)\\.?\\s*` +
-      `\\d+(?:-\\d+)?` +
+      `\\d+(?:${RANGE_SEP.source}\\d+)?` +
       `)`;
 
     const NOTE =
@@ -231,7 +233,6 @@ function buildBookContext(settings?: BibleToolsSettings) {
 
   return { abbr, allTokens, BOOK_ALT, getBookAbbr, PATTERN_G, PATTERN_HEAD };
 }
-
 
 /** ---------------- Utility: normalize book token to remove trailing period --------------- */
 function normalizeBookToken(raw: string, ctx: ReturnType<typeof buildBookContext>): string {
@@ -463,7 +464,6 @@ function replaceVerseReferencesOfMainText(
       continue;
     }
 
-    // ---- verse (v., vv., verses)
     if (g.verse) {
       if (!current_book) {
         const inferred = findLastBookBefore(text, start, ctx);
@@ -473,16 +473,48 @@ function replaceVerseReferencesOfMainText(
           continue;
         }
       }
-      const verseText = m[0];
-      const parts = verseText.split(/(\s+)/);
+
+      const verseText = m[0];               // e.g. "vv. 7b-8a:"
       const ch = current_chapter ? String(current_chapter) : "1";
-      for (const part of parts) {
-        const vm = part.match(/(\d+)/);
-        if (vm && part.trim()) {
-          out.push(`[[${targetOf(current_book)}#^${ch}-${vm[1]}|${part.trim()}]]`);
+      const target = targetOf(current_book);
+
+      // split payload after "v." / "vv." by commas or "and"
+      const payload = verseText.replace(/^\s*\b[Vv]v?(?:\.|erses?)\s*/,''); // "7b-8a:"
+      const chunks = payload.split(/\s*(?:,|(?:,?\s*and)\s*)\s*/);
+
+      // re-emit the leading "v." / "vv." prefix as plain text
+      const prefix = verseText.slice(0, verseText.length - payload.length);
+      out.push(prefix);
+
+      for (let i = 0; i < chunks.length; i++) {
+        let piece = chunks[i];
+        if (!piece) continue;
+
+        // keep the original display (including any trailing punctuation)
+        const display = piece;
+
+        // strip one trailing punctuation for parsing (keep in label)
+        const core = piece.replace(TRIM_TAIL_PUNCT, "");
+
+        // range?
+        const [left, right] = core.split(RANGE_SEP).map(s => s?.trim());
+        if (right) {
+          // left link
+          const leftNum = (left.match(/\d+/)?.[0]) ?? "";
+          out.push(`[[${target}#^${ch}-${leftNum}|${left}]]`);
+          out.push("–"); // re-emit a dash (choose the canonical en dash in output)
+          // right link
+          const rightNum = (right.match(/\d+/)?.[0]) ?? "";
+          // reconstruct display tail (right, but if original had trailing punct, put it back on right end)
+          const trailing = piece.endsWith(":") ? ":" : (piece.endsWith(";") ? ";" : (piece.endsWith(".") ? "." : ""));
+          out.push(`[[${target}#^${ch}-${rightNum}|${right}${trailing}]]`);
         } else {
-          out.push(part);
+          // single verse like "7b" (possibly with trailing ":" or ";")
+          const vNum = (core.match(/\d+/)?.[0]) ?? "";
+          out.push(`[[${target}#^${ch}-${vNum}|${display}]]`);
         }
+
+        if (i < chunks.length - 1) out.push(", "); // put commas back between chunks
       }
       continue;
     }
@@ -564,6 +596,7 @@ function replaceVerseReferencesOfMainText(
           verseString = (part === ",");
           continue;
         }
+
         let p = part.trim();
         if (!p) continue;
 
@@ -581,12 +614,12 @@ function replaceVerseReferencesOfMainText(
         }
 
         if (typeof chap !== "number") {
-          const chs = String(chap ?? "").split("-");
+          const chs = String(chap ?? "").split(RANGE_SEP);
           chap = parseInt(chs[0].replace(/[a-z]$/i, ""), 10);
         }
 
         if (v) {
-          const vs = String(v).split("-");
+          const vs = String(v).split(RANGE_SEP);
           local_current_verse = parseInt(vs[0].replace(/[a-z]$/i, ""), 10);
           vEnd = vs.length > 1 ? parseInt(vs[1].replace(/[a-z]$/i, ""), 10) : null;
         } else {
@@ -597,10 +630,26 @@ function replaceVerseReferencesOfMainText(
         const target = targetOf(current_book);
 
         if (vEnd) {
-          const displayStart = p.replace(/\d+[a-z]?$/i, "");
-          result.push(`[[${target}#^${chap}-${local_current_verse}|${prefix ? prefix : ""}${displayStart}]]`);
-          result.push(`[[${target}#^${chap}-${vEnd}|${String(p).match(/(\d+[a-z]?)$/i)?.[1] ?? ""}]]`);
-          local_current_verse = vEnd;
+          // capture original separator to re-emit between links
+          const sepMatch = p.match(new RegExp(RANGE_SEP.source));
+          const sepOut   = sepMatch?.[0] ?? "-";
+
+          // left display without trailing number AND without trailing separator
+          const leftDispNoNum = p.replace(/\d+[a-z]?$/i, "");                 // e.g. "Offb. 1:4–"
+          const leftDisp      = leftDispNoNum.replace(new RegExp(`${RANGE_SEP.source}\\s*$`), ""); // "Offb. 1:4"
+
+          // right display is the trailing number (with optional letter)
+          const rightDisp = (p.match(/(\d+[a-z]?)$/i)?.[1] ?? "");
+
+          // left link (no dash inside)
+          result.push(`[[${target}#^${chap}-${local_current_verse}|${(prefix ?? "")}${leftDisp}]]`);
+          // separator BETWEEN links
+          result.push(sepOut);
+          // right link
+          const vEndNum = parseInt(String(vEnd).replace(/[a-z]$/i, ""), 10);
+          result.push(`[[${target}#^${chap}-${vEndNum}|${rightDisp}]]`);
+
+          local_current_verse = vEndNum;
         } else {
           result.push(`[[${target}#^${chap}${local_current_verse ? `-${local_current_verse}` : ""}|${prefix ? prefix : ""}${p}]]`);
         }
@@ -640,105 +689,6 @@ export async function linkVersesInText(
   });
 }
 
-/** ========================== Version Picker (Bolls) ========================== */
-
-type BollsLanguage = {
-  language: string;
-  translations: { short_name: string; full_name: string; updated?: number; dir?: "rtl" | "ltr" }[];
-};
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const resp = await requestUrl({ url, method: "GET" });
-  if (resp.status < 200 || resp.status >= 300) {
-    throw new Error(`${resp.status}`);
-  }
-  const text = resp.text ?? "";
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    throw new Error(`Invalid JSON from ${url}`);
-  }
-}
-
-async function loadBollsCatalogue(): Promise<BollsLanguage[]> {
-  const URL = "https://bolls.life/static/bolls/app/views/languages.json";
-  return await fetchJson<BollsLanguage[]>(URL);
-}
-
-// class PickVersionModal extends Modal {
-//   private langs: BollsLanguage[] = [];
-//   private onPick: (verShort: string | null) => void;
-//   private chosenLangIdx = 0;
-//   private chosenVerIdx = 0;
-
-//   constructor(app: App, langs: BollsLanguage[], onPick: (verShort: string | null) => void) {
-//     super(app);
-//     this.langs = langs;
-//     this.onPick = onPick;
-//   }
-
-//   onOpen() {
-//     const { contentEl } = this;
-//     contentEl.empty();
-//     contentEl.createEl("h3", { text: "Link verses: choose Bible version (optional)" });
-
-//     let langSel: HTMLSelectElement;
-//     let verSel: HTMLSelectElement;
-
-//     new Setting(contentEl)
-//       .setName("Language")
-//       .addDropdown((d) => {
-//         langSel = d.selectEl;
-//         this.langs.forEach((l, idx) => d.addOption(String(idx), l.language));
-//         d.setValue(String(this.chosenLangIdx));
-//         d.onChange((v) => {
-//           this.chosenLangIdx = parseInt(v, 10);
-//           // rebuild versions
-//           verSel!.empty();
-//           const trans = this.langs[this.chosenLangIdx].translations;
-//           trans.forEach((t, i) => {
-//             const label = `${t.full_name} (${t.short_name})`;
-//             const opt = document.createElement("option");
-//             opt.value = String(i);
-//             opt.text = label;
-//             verSel!.appendChild(opt);
-//           });
-//           this.chosenVerIdx = 0;
-//           verSel!.value = "0";
-//         });
-//       });
-
-//     new Setting(contentEl)
-//       .setName("Translation")
-//       .addDropdown((d) => {
-//         verSel = d.selectEl;
-//         const trans = this.langs[this.chosenLangIdx]?.translations ?? [];
-//         trans.forEach((t, i) => {
-//           d.addOption(String(i), `${t.full_name} (${t.short_name})`);
-//         });
-//         d.setValue("0");
-//         d.onChange((v) => (this.chosenVerIdx = parseInt(v, 10)));
-//       });
-
-//     new Setting(contentEl)
-//       .setName("How to link")
-//       .setDesc("If you cancel, links will use default (no version).")
-//       .addButton((b) =>
-//         b.setButtonText("Use selected version").setCta().onClick(() => {
-//           const ver = this.langs[this.chosenLangIdx].translations[this.chosenVerIdx];
-//           this.close();
-//           this.onPick(ver?.short_name ?? null);
-//         })
-//       )
-//       .addExtraButton((b) =>
-//         b.setIcon("x").setTooltip("Cancel (no version)").onClick(() => {
-//           this.close();
-//           this.onPick(null);
-//         })
-//       );
-//   }
-// }
-
 
 /** ========================== Commands ========================== */
 
@@ -758,7 +708,7 @@ export async function commandVerseLinks(app: App, settings: BibleToolsSettings, 
       if (child instanceof TFile && child.extension === "md") {
         const content = await app.vault.read(child);
         const { yaml, body } = splitFrontmatter(content);
-        const linked = await linkVersesInText(body, settings, null); // default: no version
+        const linked = await linkVersesInText(body, settings, settings.bibleDefaultVersion); // default: no version
         await app.vault.modify(child, (yaml ?? "") + linked);
       }
     }
@@ -773,7 +723,7 @@ export async function commandVerseLinks(app: App, settings: BibleToolsSettings, 
 
   const content = await app.vault.read(file);
   const { yaml, body } = splitFrontmatter(content);
-  const linked = await linkVersesInText(body, settings, null); // default: no version
+  const linked = await linkVersesInText(body, settings, settings.bibleDefaultVersion); // default: no version
   await app.vault.modify(file, (yaml ?? "") + linked);
   new Notice("Linked verses in current file.");
 }
@@ -789,7 +739,7 @@ export async function commandVerseLinksSelectionOrLine(app: App, settings: Bible
   const selectionText = editor.getSelection();
 
   const run = async (text: string) => {
-    const linked = await linkVersesInText(text, settings, null); // default: no version
+    const linked = await linkVersesInText(text, settings, settings.bibleDefaultVersion); // default: no version
     return linked;
   };
 

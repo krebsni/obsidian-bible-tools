@@ -3,12 +3,12 @@ import type { BibleToolsSettings } from "../settings";
 import { BaseBollsModal } from "./bolls-base-modal";
 
 export class PickVersionModal extends BaseBollsModal {
-  private onPick: (verShort: string | null) => void;
+  private readonly onPick: (verShort: string | null) => void;
 
   constructor(app: App, settings: BibleToolsSettings, onPick: (verShort: string | null) => void) {
     super(app, settings, {
       languageLabel: settings.bibleDefaultLanguage ?? null,
-      versionShort:  settings.bibleDefaultVersion ?? null,
+      versionShort:  settings.bibleDefaultVersion, // can be undefined
     });
     this.onPick = onPick;
   }
