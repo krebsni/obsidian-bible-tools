@@ -13,6 +13,7 @@ import { commandOutlineFormatter } from "./commands/outline-formatter";
 import { commandVerseLinks, commandVerseLinksChooseVersion, commandVerseLinksSelectionOrLine, commandVerseLinksSelectionOrLineChooseVersion } from "./commands/verse-links";
 import { commandBuildBibleFromBolls } from "./commands/generate-bible";
 import { commandAddBibleHubLinks, commandRemoveBibleHubLinks } from "./commands/biblehub-links";
+import { commandCleanBlankLines } from "./commands/clean-blank-lines";
 
 export default class ObsidianBibleTools extends Plugin {
   settings!: BibleToolsSettings;
@@ -128,6 +129,12 @@ export default class ObsidianBibleTools extends Plugin {
       id: "remove-biblehub-interlinear-links",
       name: "BibleHub: Remove interlinear links (file / folder)",
       callback: () => commandRemoveBibleHubLinks(this.app),
+    });
+
+    this.addCommand({
+      id: "clean-blank-lines",
+      name: "Clean blank lines (remove/collapse)",
+      callback: () => commandCleanBlankLines(this.app),
     });
 
     registerProtocol(this);

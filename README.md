@@ -26,6 +26,9 @@ Outline formatter, Bible verse linker (selection/line/folder), Bible builder fro
 - Bible Tools: Insert Next/Previous Links (Current Folder)
 - Bible Tools: Create/Update Folder Index for Current Folder Bible Tools: Link verses in selection/line (choose version...)
 - Bible Tools: Format Outline (Roman/A/1/a → Markdown headings) and Link Verses
+- Bible Tools: BibleHub: Add interlinear links (file / folder)
+- Bible Tools: BibleHub: Remove interlinear links (file / folder)
+- Bible Tools: Clean Blank Lines (file / folder)
 
 
 ## Changelog
@@ -42,7 +45,6 @@ Planned features include:
 
 - Create/Update Folder Index (Books) -> instead use new Bases
 - Properties (e.g. book number for base sorting)
-- Option to link Biblehub Interlinear at end of verse lines
 
 ## License
 
