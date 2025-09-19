@@ -1,6 +1,6 @@
 # Bible Tools
 
-Outline formatter, Bible verse linker (selection/line/folder), Bible builder from public catalogues (bolls.life), PDF import with OCR, and folder utilities.
+Outline formatter, Bible verse linker (selection/line/folder), Bible builder from public catalogues (bolls.life), and folder utilities.
 
 ## Features
 
