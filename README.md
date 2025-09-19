@@ -1,6 +1,6 @@
 # Bible Tools
 
-Outline formatter, Bible verse linker (selection/line/folder), Bible builder from public catalogues (bolls.life), and folder utilities.
+Import various Bible versions from public catalogue into your obsidian vault and automatically recognize and link Bible references with various utility tools.
 
 ## Features
 
